@@ -18,7 +18,7 @@ class BaseDataset(data.Dataset):
         for filename in self.filenames:
             self.attributes.append(attributes[filename])
             if preload:
-                self.images.append(np.array(Image.open(os.path.join(root,filename))))
+                self.images.append(np.array(Image.open(os.path.join(root, filename))))
         self.attributes = np.array(self.attributes)
 
     def __len__(self):
@@ -28,7 +28,7 @@ class BaseDataset(data.Dataset):
         if self.images:
             image = self.images[idx]
         else:
-            image = np.array(Image.open(os.path.join(self.root,self.filenames[idx])))
+            image = np.array(Image.open(os.path.join(self.root, self.filenames[idx])))
         image = self.transforms(image)
         ys = self.attributes[idx]
         return image, ys
@@ -44,7 +44,7 @@ def create_transforms(transforms):
             layers.append(transforms_dict[transform](**args['args']))
     layers.append(torchvision.transforms.ToTensor())
     layers.append(torchvision.transforms.Normalize(mean, std))
-    layers.append(torchvision.transforms.Resize(224,antialias=True))
+    layers.append(torchvision.transforms.Resize(224, antialias=True))
     return torchvision.transforms.Compose(layers)
 
 
@@ -55,7 +55,7 @@ def read_attributes(path, ):
         next(reader)
         for row in reader:
             image_id = row[0]
-            attributes[image_id] = np.maximum(0,np.array(row[1:],dtype=float))
+            attributes[image_id] = np.maximum(0, np.array(row[1:], dtype=float))
     return attributes
 
 
@@ -87,3 +87,34 @@ def create_dataloader(root, batch_size, train_transforms, valid_transforms, prel
         num_workers=os.cpu_count() // 2
     )
     return train_loader, valid_loader, test_loader
+
+
+class FolderDataset(data.Dataset):
+
+    def __init__(self, data_dir, transforms):
+        self.data_dir = data_dir
+        self.transforms = transforms
+        self.img_paths = []
+        # This one-liner basically generates a sorted list of full paths to each image in the test directory
+        for filename in sorted(os.listdir(self.data_dir)):
+            if filename.endswith('.jpg'):
+                self.img_paths.append(os.path.join(self.data_dir, filename))
+        # self.img_paths = list(map(lambda fname: os.path.join(self.data_dir, fname), sorted(os.listdir(self.data_dir))))
+
+    def __len__(self):
+        return len(self.img_paths)
+
+    def __getitem__(self, idx):
+        return self.transforms(Image.open(self.img_paths[idx])), 1
+
+
+def create_folder(root, batch_size, transforms=create_transforms([])):
+    dataset = FolderDataset(root, transforms)
+    loader = data.DataLoader(
+        dataset=dataset,
+        batch_size=batch_size,
+        shuffle=False,
+        drop_last=False,
+        num_workers=os.cpu_count()
+    )
+    return loader
