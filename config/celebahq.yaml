@@ -1,0 +1,19 @@
+dataset:
+  root: /data/baole/celeba_hq
+  batch_size: 256
+  train_transforms: []
+  valid_transforms: []
+  preload: false
+
+model:
+  name: efficientnet
+  args:
+    n: 40
+
+optimizer:
+  name: Adam
+  args:
+    lr: 1.e-4
+
+epoch_max: 30
+precision: full
