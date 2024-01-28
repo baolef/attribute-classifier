@@ -1,5 +1,5 @@
 dataset:
-  root: /data/baole/celeba_hq
+  root: /data/baole/data/celeba_hq
   batch_size: 256
   train_transforms: []
   valid_transforms: []
